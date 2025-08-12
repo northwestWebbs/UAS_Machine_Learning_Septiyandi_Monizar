@@ -1,0 +1,664 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "id": "gyZDwfvUzMSO",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "317838e9-66a6-417e-efbc-c83cc77510ce"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Packages installed (or already present).\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install -q pandas numpy scikit-learn matplotlib seaborn joblib xgboost\n",
+        "print(\"Packages installed (or already present).\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import drive\n",
+        "drive.mount('/content/drive')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "WBlUH__E6oVY",
+        "outputId": "b2b799ca-34f9-4821-bb14-ffd21cb429ce"
+      },
+      "execution_count": 12,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Drive already mounted at /content/drive; to attempt to forcibly remount, call drive.mount(\"/content/drive\", force_remount=True).\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os\n",
+        "\n",
+        "folder_path = \"/content/drive/MyDrive/colab_outputs\"\n",
+        "os.makedirs(folder_path, exist_ok=True)\n",
+        "\n",
+        "print(\"Folder dibuat di:\", folder_path)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "I7c2qF_U8C_j",
+        "outputId": "6b17b1de-e4ee-4b8b-aa21-30794f4d4ee4"
+      },
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Folder dibuat di: /content/drive/MyDrive/colab_outputs\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import files\n",
+        "uploaded = files.upload()\n",
+        "import io, pandas as pd\n",
+        "fn = list(uploaded.keys())[0]\n",
+        "df = pd.read_csv(io.BytesIO(uploaded[fn]))\n",
+        "print(\"Loaded:\", fn, \"shape:\", df.shape)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 91
+        },
+        "id": "0I0bIeDk5uS6",
+        "outputId": "3905e93b-c186-4f2a-a32c-1be91922d961"
+      },
+      "execution_count": 15,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ],
+            "text/html": [
+              "\n",
+              "     <input type=\"file\" id=\"files-f5ef0ff2-09ac-4c46-a9b7-4603271e21db\" name=\"files[]\" multiple disabled\n",
+              "        style=\"border:none\" />\n",
+              "     <output id=\"result-f5ef0ff2-09ac-4c46-a9b7-4603271e21db\">\n",
+              "      Upload widget is only available when the cell has been executed in the\n",
+              "      current browser session. Please rerun this cell to enable.\n",
+              "      </output>\n",
+              "      <script>// Copyright 2017 Google LLC\n",
+              "//\n",
+              "// Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+              "// you may not use this file except in compliance with the License.\n",
+              "// You may obtain a copy of the License at\n",
+              "//\n",
+              "//      http://www.apache.org/licenses/LICENSE-2.0\n",
+              "//\n",
+              "// Unless required by applicable law or agreed to in writing, software\n",
+              "// distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+              "// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+              "// See the License for the specific language governing permissions and\n",
+              "// limitations under the License.\n",
+              "\n",
+              "/**\n",
+              " * @fileoverview Helpers for google.colab Python module.\n",
+              " */\n",
+              "(function(scope) {\n",
+              "function span(text, styleAttributes = {}) {\n",
+              "  const element = document.createElement('span');\n",
+              "  element.textContent = text;\n",
+              "  for (const key of Object.keys(styleAttributes)) {\n",
+              "    element.style[key] = styleAttributes[key];\n",
+              "  }\n",
+              "  return element;\n",
+              "}\n",
+              "\n",
+              "// Max number of bytes which will be uploaded at a time.\n",
+              "const MAX_PAYLOAD_SIZE = 100 * 1024;\n",
+              "\n",
+              "function _uploadFiles(inputId, outputId) {\n",
+              "  const steps = uploadFilesStep(inputId, outputId);\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  // Cache steps on the outputElement to make it available for the next call\n",
+              "  // to uploadFilesContinue from Python.\n",
+              "  outputElement.steps = steps;\n",
+              "\n",
+              "  return _uploadFilesContinue(outputId);\n",
+              "}\n",
+              "\n",
+              "// This is roughly an async generator (not supported in the browser yet),\n",
+              "// where there are multiple asynchronous steps and the Python side is going\n",
+              "// to poll for completion of each step.\n",
+              "// This uses a Promise to block the python side on completion of each step,\n",
+              "// then passes the result of the previous step as the input to the next step.\n",
+              "function _uploadFilesContinue(outputId) {\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  const steps = outputElement.steps;\n",
+              "\n",
+              "  const next = steps.next(outputElement.lastPromiseValue);\n",
+              "  return Promise.resolve(next.value.promise).then((value) => {\n",
+              "    // Cache the last promise value to make it available to the next\n",
+              "    // step of the generator.\n",
+              "    outputElement.lastPromiseValue = value;\n",
+              "    return next.value.response;\n",
+              "  });\n",
+              "}\n",
+              "\n",
+              "/**\n",
+              " * Generator function which is called between each async step of the upload\n",
+              " * process.\n",
+              " * @param {string} inputId Element ID of the input file picker element.\n",
+              " * @param {string} outputId Element ID of the output display.\n",
+              " * @return {!Iterable<!Object>} Iterable of next steps.\n",
+              " */\n",
+              "function* uploadFilesStep(inputId, outputId) {\n",
+              "  const inputElement = document.getElementById(inputId);\n",
+              "  inputElement.disabled = false;\n",
+              "\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  outputElement.innerHTML = '';\n",
+              "\n",
+              "  const pickedPromise = new Promise((resolve) => {\n",
+              "    inputElement.addEventListener('change', (e) => {\n",
+              "      resolve(e.target.files);\n",
+              "    });\n",
+              "  });\n",
+              "\n",
+              "  const cancel = document.createElement('button');\n",
+              "  inputElement.parentElement.appendChild(cancel);\n",
+              "  cancel.textContent = 'Cancel upload';\n",
+              "  const cancelPromise = new Promise((resolve) => {\n",
+              "    cancel.onclick = () => {\n",
+              "      resolve(null);\n",
+              "    };\n",
+              "  });\n",
+              "\n",
+              "  // Wait for the user to pick the files.\n",
+              "  const files = yield {\n",
+              "    promise: Promise.race([pickedPromise, cancelPromise]),\n",
+              "    response: {\n",
+              "      action: 'starting',\n",
+              "    }\n",
+              "  };\n",
+              "\n",
+              "  cancel.remove();\n",
+              "\n",
+              "  // Disable the input element since further picks are not allowed.\n",
+              "  inputElement.disabled = true;\n",
+              "\n",
+              "  if (!files) {\n",
+              "    return {\n",
+              "      response: {\n",
+              "        action: 'complete',\n",
+              "      }\n",
+              "    };\n",
+              "  }\n",
+              "\n",
+              "  for (const file of files) {\n",
+              "    const li = document.createElement('li');\n",
+              "    li.append(span(file.name, {fontWeight: 'bold'}));\n",
+              "    li.append(span(\n",
+              "        `(${file.type || 'n/a'}) - ${file.size} bytes, ` +\n",
+              "        `last modified: ${\n",
+              "            file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() :\n",
+              "                                    'n/a'} - `));\n",
+              "    const percent = span('0% done');\n",
+              "    li.appendChild(percent);\n",
+              "\n",
+              "    outputElement.appendChild(li);\n",
+              "\n",
+              "    const fileDataPromise = new Promise((resolve) => {\n",
+              "      const reader = new FileReader();\n",
+              "      reader.onload = (e) => {\n",
+              "        resolve(e.target.result);\n",
+              "      };\n",
+              "      reader.readAsArrayBuffer(file);\n",
+              "    });\n",
+              "    // Wait for the data to be ready.\n",
+              "    let fileData = yield {\n",
+              "      promise: fileDataPromise,\n",
+              "      response: {\n",
+              "        action: 'continue',\n",
+              "      }\n",
+              "    };\n",
+              "\n",
+              "    // Use a chunked sending to avoid message size limits. See b/62115660.\n",
+              "    let position = 0;\n",
+              "    do {\n",
+              "      const length = Math.min(fileData.byteLength - position, MAX_PAYLOAD_SIZE);\n",
+              "      const chunk = new Uint8Array(fileData, position, length);\n",
+              "      position += length;\n",
+              "\n",
+              "      const base64 = btoa(String.fromCharCode.apply(null, chunk));\n",
+              "      yield {\n",
+              "        response: {\n",
+              "          action: 'append',\n",
+              "          file: file.name,\n",
+              "          data: base64,\n",
+              "        },\n",
+              "      };\n",
+              "\n",
+              "      let percentDone = fileData.byteLength === 0 ?\n",
+              "          100 :\n",
+              "          Math.round((position / fileData.byteLength) * 100);\n",
+              "      percent.textContent = `${percentDone}% done`;\n",
+              "\n",
+              "    } while (position < fileData.byteLength);\n",
+              "  }\n",
+              "\n",
+              "  // All done.\n",
+              "  yield {\n",
+              "    response: {\n",
+              "      action: 'complete',\n",
+              "    }\n",
+              "  };\n",
+              "}\n",
+              "\n",
+              "scope.google = scope.google || {};\n",
+              "scope.google.colab = scope.google.colab || {};\n",
+              "scope.google.colab._files = {\n",
+              "  _uploadFiles,\n",
+              "  _uploadFilesContinue,\n",
+              "};\n",
+              "})(self);\n",
+              "</script> "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Saving forestfires.csv to forestfires (1).csv\n",
+            "Loaded: forestfires (1).csv shape: (517, 13)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.head()\n",
+        "df.info()\n",
+        "print(\"\\nColumns:\", list(df.columns))\n",
+        "print(\"\\nMissing per column:\\n\", df.isna().sum())\n",
+        "TARGET_COLUMN = \"label\"\n",
+        "N_CLUSTERS = 3"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "mRZIxWYb6GFt",
+        "outputId": "3ce9d2b4-993d-49ae-c0b6-fa9487ff4fa6"
+      },
+      "execution_count": 20,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 517 entries, 0 to 516\n",
+            "Data columns (total 13 columns):\n",
+            " #   Column  Non-Null Count  Dtype  \n",
+            "---  ------  --------------  -----  \n",
+            " 0   X       517 non-null    int64  \n",
+            " 1   Y       517 non-null    int64  \n",
+            " 2   month   517 non-null    object \n",
+            " 3   day     517 non-null    object \n",
+            " 4   FFMC    517 non-null    float64\n",
+            " 5   DMC     517 non-null    float64\n",
+            " 6   DC      517 non-null    float64\n",
+            " 7   ISI     517 non-null    float64\n",
+            " 8   temp    517 non-null    float64\n",
+            " 9   RH      517 non-null    int64  \n",
+            " 10  wind    517 non-null    float64\n",
+            " 11  rain    517 non-null    float64\n",
+            " 12  area    517 non-null    float64\n",
+            "dtypes: float64(8), int64(3), object(2)\n",
+            "memory usage: 52.6+ KB\n",
+            "\n",
+            "Columns: ['X', 'Y', 'month', 'day', 'FFMC', 'DMC', 'DC', 'ISI', 'temp', 'RH', 'wind', 'rain', 'area']\n",
+            "\n",
+            "Missing per column:\n",
+            " X        0\n",
+            "Y        0\n",
+            "month    0\n",
+            "day      0\n",
+            "FFMC     0\n",
+            "DMC      0\n",
+            "DC       0\n",
+            "ISI      0\n",
+            "temp     0\n",
+            "RH       0\n",
+            "wind     0\n",
+            "rain     0\n",
+            "area     0\n",
+            "dtype: int64\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os, json\n",
+        "from datetime import datetime\n",
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "from sklearn.impute import SimpleImputer\n",
+        "from sklearn.preprocessing import StandardScaler, OneHotEncoder\n",
+        "from sklearn.compose import ColumnTransformer\n",
+        "from sklearn.pipeline import Pipeline\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor\n",
+        "from sklearn.linear_model import LogisticRegression, LinearRegression\n",
+        "from sklearn.metrics import accuracy_score, f1_score, classification_report, mean_squared_error, r2_score, confusion_matrix\n",
+        "from sklearn.cluster import KMeans\n",
+        "from sklearn.metrics import silhouette_score\n",
+        "import joblib, shutil\n",
+        "\n",
+        "sns.set(style=\"whitegrid\")\n",
+        "\n",
+        "def ensure_dir(d):\n",
+        "    os.makedirs(d, exist_ok=True)\n",
+        "\n",
+        "def save_fig(fig, path):\n",
+        "    fig.savefig(path, bbox_inches='tight', dpi=150)\n",
+        "    plt.close(fig)\n",
+        "\n",
+        "def basic_eda(df, outdir):\n",
+        "    meta = {}\n",
+        "    meta['shape'] = df.shape\n",
+        "    meta['dtypes'] = df.dtypes.astype(str).to_dict()\n",
+        "    meta['missing'] = df.isna().sum().to_dict()\n",
+        "    meta['describe'] = df.describe(include='all').to_dict()\n",
+        "    with open(os.path.join(outdir, 'eda_summary.json'), 'w') as f:\n",
+        "        json.dump(meta, f, default=str, indent=2)\n",
+        "    # missing map\n",
+        "    fig = plt.figure(figsize=(8,4))\n",
+        "    sns.heatmap(df.isna(), cbar=False)\n",
+        "    plt.title('Missing values map')\n",
+        "    save_fig(fig, os.path.join(outdir, 'missing_map.png'))\n",
+        "    # correlation for numeric\n",
+        "    num = df.select_dtypes(include=[np.number])\n",
+        "    if num.shape[1] > 1:\n",
+        "        fig = plt.figure(figsize=(10,8))\n",
+        "        sns.heatmap(num.corr(), annot=True, fmt=\".2f\")\n",
+        "        plt.title('Correlation (numeric)')\n",
+        "        save_fig(fig, os.path.join(outdir, 'correlation.png'))\n",
+        "    # some distribution plots for numeric (up to 6)\n",
+        "    for col in num.columns[:6]:\n",
+        "        fig = plt.figure()\n",
+        "        sns.histplot(num[col].dropna(), kde=True)\n",
+        "        plt.title(f'Distribution: {col}')\n",
+        "        save_fig(fig, os.path.join(outdir, f'dist_{col}.png'))\n",
+        "    return meta\n",
+        "\n",
+        "def prepare_pipeline(X):\n",
+        "    num_cols = X.select_dtypes(include=[np.number]).columns.tolist()\n",
+        "    cat_cols = X.select_dtypes(exclude=[np.number]).columns.tolist()\n",
+        "    num_pipe = Pipeline([('imputer', SimpleImputer(strategy='median')), ('scaler', StandardScaler())])\n",
+        "    cat_pipe = Pipeline([('imputer', SimpleImputer(strategy='most_frequent')), ('ohe', OneHotEncoder(handle_unknown='ignore', sparse=False))])\n",
+        "    preproc = ColumnTransformer([('num', num_pipe, num_cols), ('cat', cat_pipe, cat_cols)], remainder='drop')\n",
+        "    return preproc\n",
+        "\n",
+        "def run_classification(X, y, outdir):\n",
+        "    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)\n",
+        "    preproc = prepare_pipeline(X_train)\n",
+        "    pipes = {\n",
+        "        'logistic': Pipeline([('pre', preproc), ('clf', LogisticRegression(max_iter=1000))]),\n",
+        "        'random_forest': Pipeline([('pre', preproc), ('clf', RandomForestClassifier(n_estimators=200, random_state=42))])\n",
+        "    }\n",
+        "    results = {}\n",
+        "    for name, pipe in pipes.items():\n",
+        "        pipe.fit(X_train, y_train)\n",
+        "        preds = pipe.predict(X_test)\n",
+        "        acc = accuracy_score(y_test, preds)\n",
+        "        f1 = f1_score(y_test, preds, average='weighted')\n",
+        "        results[name] = {'accuracy': acc, 'f1_weighted': f1}\n",
+        "        joblib.dump(pipe, os.path.join(outdir, f'model_{name}.pkl'))\n",
+        "        if name == 'random_forest':\n",
+        "            cm = confusion_matrix(y_test, preds)\n",
+        "            fig = plt.figure(figsize=(6,5))\n",
+        "            sns.heatmap(cm, annot=True, fmt='d')\n",
+        "            plt.title('Confusion Matrix (Random Forest)')\n",
+        "            save_fig(fig, os.path.join(outdir, 'confusion_matrix_rf.png'))\n",
+        "            with open(os.path.join(outdir, 'classification_report_rf.txt'),'w') as f:\n",
+        "                f.write(classification_report(y_test, preds))\n",
+        "    with open(os.path.join(outdir, 'metrics_classification.json'),'w') as f:\n",
+        "        json.dump(results, f, indent=2)\n",
+        "    return results\n",
+        "\n",
+        "def run_regression(X, y, outdir):\n",
+        "    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n",
+        "    preproc = prepare_pipeline(X_train)\n",
+        "    pipes = {\n",
+        "        'linear': Pipeline([('pre', preproc), ('reg', LinearRegression())]),\n",
+        "        'random_forest': Pipeline([('pre', preproc), ('reg', RandomForestRegressor(n_estimators=200, random_state=42))])\n",
+        "    }\n",
+        "    results = {}\n",
+        "    for name, pipe in pipes.items():\n",
+        "        pipe.fit(X_train, y_train)\n",
+        "        preds = pipe.predict(X_test)\n",
+        "        mse = mean_squared_error(y_test, preds)\n",
+        "        rmse = np.sqrt(mse)\n",
+        "        r2 = r2_score(y_test, preds)\n",
+        "        results[name] = {'rmse': float(rmse), 'r2': float(r2)}\n",
+        "        joblib.dump(pipe, os.path.join(outdir, f'model_{name}.pkl'))\n",
+        "    with open(os.path.join(outdir, 'metrics_regression.json'),'w') as f:\n",
+        "        json.dump(results, f, indent=2)\n",
+        "    return results\n",
+        "\n",
+        "def run_clustering(df, outdir, n_clusters=3):\n",
+        "    num = df.select_dtypes(include=[np.number]).dropna(axis=1, how='all')\n",
+        "    X = num.fillna(num.median())\n",
+        "    scaler = StandardScaler()\n",
+        "    Xs = scaler.fit_transform(X)\n",
+        "    kmeans = KMeans(n_clusters=n_clusters, random_state=42)\n",
+        "    labels = kmeans.fit_predict(Xs)\n",
+        "    df_out = df.copy()\n",
+        "    df_out['cluster'] = labels\n",
+        "    df_out.to_csv(os.path.join(outdir, 'clustered_data.csv'), index=False)\n",
+        "    sil = None\n",
+        "    if len(set(labels)) > 1:\n",
+        "        sil = float(silhouette_score(Xs, labels))\n",
+        "    with open(os.path.join(outdir, 'clustering_info.json'),'w') as f:\n",
+        "        json.dump({'inertia': float(kmeans.inertia_), 'n_clusters': n_clusters, 'silhouette': sil}, f)\n",
+        "    # elbow (inertia) optional: omitted for brevity\n",
+        "    return {'n_clusters': n_clusters, 'inertia': float(kmeans.inertia_), 'silhouette': sil}\n",
+        "\n",
+        "def run_pipeline(df, target=None, n_clusters=3, save_to_drive=None):\n",
+        "    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')\n",
+        "    outdir = os.path.join('outputs', timestamp)\n",
+        "    ensure_dir(outdir)\n",
+        "    df.to_csv(os.path.join(outdir, 'dataset_copy.csv'), index=False)\n",
+        "    eda = basic_eda(df, outdir)\n",
+        "    summary = {'timestamp': timestamp, 'rows': int(df.shape[0]), 'cols': int(df.shape[1])}\n",
+        "    if target:\n",
+        "        if target not in df.columns:\n",
+        "            raise ValueError(f\"Target {target} not found in dataset.\")\n",
+        "        y = df[target]\n",
+        "        X = df.drop(columns=[target])\n",
+        "        prob = 'classification' if (y.dtype.kind not in 'ifu' or y.nunique() <= 20) else 'regression'\n",
+        "        summary['problem_type'] = prob\n",
+        "        if prob == 'classification':\n",
+        "            metrics = run_classification(X, y, outdir)\n",
+        "            summary['metrics'] = metrics\n",
+        "        else:\n",
+        "            metrics = run_regression(X, y, outdir)\n",
+        "            summary['metrics'] = metrics\n",
+        "    else:\n",
+        "        cluster_info = run_clustering(df, outdir, n_clusters=n_clusters)\n",
+        "        summary['clustering'] = cluster_info\n",
+        "    with open(os.path.join(outdir, 'run_summary.json'),'w') as f:\n",
+        "        json.dump(summary, f, indent=2)\n",
+        "    # optionally copy to Drive\n",
+        "    if save_to_drive:\n",
+        "        dst = os.path.join(save_to_drive, f'outputs_{timestamp}')\n",
+        "        shutil.copytree(outdir, dst)\n",
+        "        print(\"Copied outputs to Drive:\", dst)\n",
+        "    print(\"Done. Outputs at:\", outdir)\n",
+        "    return outdir"
+      ],
+      "metadata": {
+        "id": "eK-OyGAU8wvw"
+      },
+      "execution_count": 21,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "TARGET_COLUMN = \"label\"\n",
+        "outdir = run_pipeline(df, target=None, n_clusters=4, save_to_drive=None)\n",
+        "print(\"Outdir:\", outdir)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "K4zpSisb846F",
+        "outputId": "8f15c557-de17-4595-e0b7-9dbaacb828af"
+      },
+      "execution_count": 23,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Done. Outputs at: outputs/20250812_154408\n",
+            "Outdir: outputs/20250812_154408\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import shutil\n",
+        "zip_name = \"analysis_outputs\"\n",
+        "shutil.make_archive(zip_name, 'zip', outdir)\n",
+        "from google.colab import files\n",
+        "files.download(zip_name + '.zip')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 17
+        },
+        "id": "8ZtovyaR9FPt",
+        "outputId": "4d67b725-64f4-4431-8adb-5e97ee7b29a8"
+      },
+      "execution_count": 24,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "\n",
+              "    async function download(id, filename, size) {\n",
+              "      if (!google.colab.kernel.accessAllowed) {\n",
+              "        return;\n",
+              "      }\n",
+              "      const div = document.createElement('div');\n",
+              "      const label = document.createElement('label');\n",
+              "      label.textContent = `Downloading \"${filename}\": `;\n",
+              "      div.appendChild(label);\n",
+              "      const progress = document.createElement('progress');\n",
+              "      progress.max = size;\n",
+              "      div.appendChild(progress);\n",
+              "      document.body.appendChild(div);\n",
+              "\n",
+              "      const buffers = [];\n",
+              "      let downloaded = 0;\n",
+              "\n",
+              "      const channel = await google.colab.kernel.comms.open(id);\n",
+              "      // Send a message to notify the kernel that we're ready.\n",
+              "      channel.send({})\n",
+              "\n",
+              "      for await (const message of channel.messages) {\n",
+              "        // Send a message to notify the kernel that we're ready.\n",
+              "        channel.send({})\n",
+              "        if (message.buffers) {\n",
+              "          for (const buffer of message.buffers) {\n",
+              "            buffers.push(buffer);\n",
+              "            downloaded += buffer.byteLength;\n",
+              "            progress.value = downloaded;\n",
+              "          }\n",
+              "        }\n",
+              "      }\n",
+              "      const blob = new Blob(buffers, {type: 'application/binary'});\n",
+              "      const a = document.createElement('a');\n",
+              "      a.href = window.URL.createObjectURL(blob);\n",
+              "      a.download = filename;\n",
+              "      div.appendChild(a);\n",
+              "      a.click();\n",
+              "      div.remove();\n",
+              "    }\n",
+              "  "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "download(\"download_8ab330b8-84e3-4ac3-b8c0-13cc55251f56\", \"analysis_outputs.zip\", 422486)"
+            ]
+          },
+          "metadata": {}
+        }
+      ]
+    }
+  ]
+}
