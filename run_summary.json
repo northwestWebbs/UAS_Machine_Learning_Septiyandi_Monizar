@@ -1,0 +1,10 @@
+{
+  "timestamp": "20250812_154408",
+  "rows": 517,
+  "cols": 13,
+  "clustering": {
+    "n_clusters": 4,
+    "inertia": 3762.244439524558,
+    "silhouette": 0.1856803764041242
+  }
+}
